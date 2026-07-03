@@ -1,7 +1,7 @@
 {
   "name": "react-native-adaptive-haptics",
   "version": "0.1.0",
-  "description": "The best cross-platform haptic feedback library for React Native",
+  "description": "The best cross-platform haptic feedback library for React Native — semantic API, custom patterns, .ahap support, and zero-latency pre-warming.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -41,8 +41,18 @@
   },
   "keywords": [
     "react-native",
-    "ios",
-    "android"
+    "haptics",
+    "haptic-feedback",
+    "ios-haptics",
+    "android-vibration",
+    "taptic-engine",
+    "uifeedbackgenerator",
+    "chhapticengine",
+    "vibration",
+    "semantic-haptics",
+    "cross-platform",
+    "turbo-module",
+    "fabric"
   ],
   "repository": {
     "type": "git",
@@ -86,7 +96,7 @@
   "workspaces": [
     "example"
   ],
-  "packageManager": "yarn@4.11.0",
+  "packageManager": "pnpm@9.0.0",
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
@@ -122,11 +132,14 @@
   },
   "jest": {
     "preset": "@react-native/jest-preset",
+    "transformIgnorePatterns": [
+      "/node_modules/(?!.*@react-native|.*react-native/)"
+    ],
     "testEnvironmentOptions": {
       "customExportConditions": [
         "require",
         "react-native",
-        "<%- project.sourceCondition -%>"
+        "react-native-adaptive-haptics-source"
       ]
     },
     "modulePathIgnorePatterns": [

@@ -30,5 +30,18 @@ target 'AdaptiveHapticsExample' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Workaround for Xcode 26 beta: UIUtilities is now a SubFramework.
+    app_target = installer.pods_project.targets.find { |t| t.name == 'AdaptiveHapticsExample' }
+    if app_target
+      app_target.build_configurations.each do |config|
+        subframeworks_path = '$(DEVELOPER_DIR)/Platforms/$(PLATFORM_NAME).platform/Developer/SDKs/$(SDK_NAME)/System/Library/SubFrameworks'
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << subframeworks_path
+        config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
+        config.build_settings['OTHER_LDFLAGS'] << '-Wl,-weak_framework,UIUtilities'
+        config.build_settings['OTHER_LDFLAGS'] << '-Wl,-weak_framework,SwiftUICore'
+      end
+    end
   end
 end
