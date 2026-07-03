@@ -336,8 +336,6 @@
   return [[CHHapticPattern alloc] initWithEvents:events parameters:@[] error:&error];
 }
 
-@end
-
 #pragma mark - TurboModule
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
