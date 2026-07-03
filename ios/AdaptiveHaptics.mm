@@ -18,6 +18,14 @@
 @property (nonatomic, strong) UISelectionFeedbackGenerator *selection;
 @property (nonatomic, strong) CHHapticEngine *customEngine;
 @property (nonatomic, assign) BOOL customEngineRunning;
+
+// Private method declarations
+- (void)startCustomEngine;
+- (void)handleAppDidBecomeActive;
+- (void)handleAudioSessionInterruption:(NSNotification *)notification;
+- (void)playCustomPattern:(NSString *)json;
+- (void)playCustomPatternFromFile:(NSString *)filename;
+- (nullable CHHapticPattern *)convertToCHHapticPattern:(NSArray<NSDictionary *> *)array;
 @end
 
 @implementation AdaptiveHaptics
@@ -130,13 +138,13 @@
   // iOS devices. CoreHaptics may be unavailable on some devices/simulators, but our
   // custom pattern methods fall back gracefully. Always return YES so the JS guard
   // doesn't block the UIKit-based API.
- 
+  return @(YES);
+}
 
 - (NSNumber *)hasAmplitudeControl {
   // iOS does not expose amplitude control — UIFeedbackGenerator handles
   // intensity internally through the generator styles.
   return @(NO);
-} return @(YES);
 }
 
 #pragma mark - CHHapticEngine Lifecycle
@@ -174,6 +182,12 @@
       weakSelf.customEngineRunning = (err == nil);
     }];
 
+    self.customEngine = engine;
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleAppDidBecomeActive)
+                                                 name:UIApplicationDidBecomeActiveNotification
+                                               object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleAudioSessionInterruption:)
                                                  name:AVAudioSessionInterruptionNotification
@@ -190,18 +204,13 @@
 
 - (void)handleAudioSessionInterruption:(NSNotification *)notification {
   NSDictionary *info = notification.userInfo;
-  AVAudioSessionInterruptionType type = [info[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+  NSUInteger rawType = [info[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+  AVAudioSessionInterruptionType type = (AVAudioSessionInterruptionType)rawType;
   if (type == AVAudioSessionInterruptionTypeEnded && self.customEngine && !self.customEngineRunning) {
     [self.customEngine startWithCompletionHandler:^(NSError * _Nullable error) {
       self.customEngineRunning = (error == nil);
     }];
   }
-
-- (void)handleAppDidBecomeActive {
-  if (!self.customEngine || self.customEngineRunning) return;
-  [self.customEngine startWithCompletionHandler:^(NSError * _Nullable error) {
-    self.customEngineRunning = (error == nil);
-  }];
 }
 
 #pragma mark - Custom Pattern Playback
@@ -254,8 +263,6 @@
     }
 
     NSError *error = nil;
-    // initWithContentsOfURL:error: is iOS 16+; use initWithDictionary:error: instead
-    // which has been available since iOS 13.0.
     NSData *fileData = [NSData dataWithContentsOfURL:url];
     if (!fileData) {
       [self.impactMedium impactOccurred];
@@ -328,6 +335,8 @@
   NSError *error = nil;
   return [[CHHapticPattern alloc] initWithEvents:events parameters:@[] error:&error];
 }
+
+@end
 
 #pragma mark - TurboModule
 
