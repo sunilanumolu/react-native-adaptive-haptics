@@ -203,17 +203,17 @@ feel across OEMs (Samsung, Pixel, OnePlus, etc.). All timings are manually tuned
 On Android API <26, the same timing arrays are used but without per-segment amplitude
 control (the system applies its own default intensity).
 
-| Semantic           | iOS                            | Android                                          |
-| ------------------ | ------------------------------ | ------------------------------------------------ |
-| `selection()`      | `UISelectionFeedbackGenerator` | Waveform `[0,25,10,1]` @ 40% amplitude           |
-| `impact('light')`  | `.light`                       | Waveform `[0,40,10,1]` @ 47% amplitude           |
-| `impact('medium')` | `.medium`                      | Waveform `[0,70,10,1]` @ 78% amplitude           |
-| `impact('heavy')`  | `.heavy`                       | Waveform `[0,100,10,1]` @ 100% amplitude         |
-| `impact('rigid')`  | `.rigid` (iOS 13+)             | Waveform `[0,80,10,1]` @ 100% (heavy fallback)   |
-| `impact('soft')`   | `.soft` (iOS 13+)              | Waveform `[0,30,10,1]` @ 35% (light fallback)    |
-| `success()`        | `.success` notification        | Double-pulse `[0,35,80,35]`                      |
-| `warning()`        | `.warning` notification        | Double-pulse `[0,45,70,45]`                      |
-| `error()`          | `.error` notification          | Triple-pulse `[0,35,55,35,55,35]`                |
+| Semantic           | iOS                            | Android                                        |
+| ------------------ | ------------------------------ | ---------------------------------------------- |
+| `selection()`      | `UISelectionFeedbackGenerator` | Waveform `[0,25,10,1]` @ 40% amplitude         |
+| `impact('light')`  | `.light`                       | Waveform `[0,40,10,1]` @ 47% amplitude         |
+| `impact('medium')` | `.medium`                      | Waveform `[0,70,10,1]` @ 78% amplitude         |
+| `impact('heavy')`  | `.heavy`                       | Waveform `[0,100,10,1]` @ 100% amplitude       |
+| `impact('rigid')`  | `.rigid` (iOS 13+)             | Waveform `[0,80,10,1]` @ 100% (heavy fallback) |
+| `impact('soft')`   | `.soft` (iOS 13+)              | Waveform `[0,30,10,1]` @ 35% (light fallback)  |
+| `success()`        | `.success` notification        | Double-pulse `[0,35,80,35]`                    |
+| `warning()`        | `.warning` notification        | Double-pulse `[0,45,70,45]`                    |
+| `error()`          | `.error` notification          | Triple-pulse `[0,35,55,35,55,35]`              |
 
 Fallback timings are **manually tuned on reference devices** (Pixel, Samsung, OnePlus), not guessed.
 

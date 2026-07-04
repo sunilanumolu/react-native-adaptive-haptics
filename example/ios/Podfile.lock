@@ -2000,7 +2000,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  AdaptiveHaptics: a4351ecb9182bd5d3ec6264b08cdebf3ea0b2031
+  AdaptiveHaptics: a1626fc512441c191c5f3fcdbdf52f8efb12e979
   FBLazyVector: c00c20551d40126351a6783c47ce75f5b374851b
   hermes-engine: a7f76bb1d97fd107c8c59a729142954edd0b9c68
   RCTDeprecation: 3bb167081b134461cfeb875ff7ae1945f8635257
