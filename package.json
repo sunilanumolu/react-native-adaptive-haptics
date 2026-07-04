@@ -1,6 +1,6 @@
 {
   "name": "react-native-adaptive-haptics",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "The best cross-platform haptic feedback library for React Native — semantic API, custom patterns, .ahap support, and zero-latency pre-warming.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
