@@ -157,9 +157,12 @@ jobs:
       - name: Install cocoapods
         if: env.turbo_cache_hit != 1
         run: |
+          rm -rf node_modules example/node_modules
+          pnpm install --frozen-lockfile
           cd example
           bundle config set path vendor/bundle
           bundle install --jobs 4 --retry 3
+          rm -rf ios/Pods ios/Podfile.lock
           bundle exec pod install --project-directory=ios
 
       - name: Build example for iOS
