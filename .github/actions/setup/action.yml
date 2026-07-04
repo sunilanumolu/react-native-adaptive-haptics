@@ -23,6 +23,10 @@ runs:
           ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
           ${{ runner.os }}-pnpm-
 
+    - name: Configure pnpm for CI
+      run: pnpm config set package-import-method copy
+      shell: bash
+
     - name: Install dependencies
       if: steps.pnpm-cache.outputs.cache-hit != 'true'
       run: pnpm install --frozen-lockfile
