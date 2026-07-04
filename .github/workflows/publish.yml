@@ -46,7 +46,13 @@ jobs:
             echo "Publishing version $VERSION"
           fi
 
-      - run: npm publish --provenance --access public
+      - name: Verify npm auth
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
         if: steps.check.outputs.exists == 'false'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
