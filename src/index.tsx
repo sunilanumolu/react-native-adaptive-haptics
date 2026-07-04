@@ -32,8 +32,8 @@ function guard(): boolean {
  * Trigger a selection haptic — use for picker changes, toggle switches, etc.
  *
  * iOS: UISelectionFeedbackGenerator
- * Android ≥29: VibrationEffect.EFFECT_TICK
- * Android <29: 10 ms pulse
+ * Android: Waveform [0,25,10,1]
+ *         (amplitude control on API ≥26; same timings on <26 without amplitude)
  */
 export function selection(): void {
   if (!guard()) {
@@ -45,14 +45,15 @@ export function selection(): void {
 /**
  * Trigger an impact haptic with the given style.
  *
- * | Style    | iOS                                    | Android ≥29                    | Android <29    |
- * |----------|----------------------------------------|--------------------------------|----------------|
- * | `light`  | UIImpactFeedbackGenerator(.light)      | EFFECT_CLICK                   | vibrate(20ms)  |
- * | `medium` | UIImpactFeedbackGenerator(.medium)     | EFFECT_HEAVY_CLICK             | vibrate(30ms)  |
- * | `heavy`  | UIImpactFeedbackGenerator(.heavy)      | EFFECT_DOUBLE_CLICK            | vibrate(40ms)  |
- * | `rigid`  | UIImpactFeedbackGenerator(.rigid)      | EFFECT_HEAVY_CLICK (fallback)  | vibrate(35ms)  |
- * | `soft`   | UIImpactFeedbackGenerator(.soft)       | EFFECT_TICK (fallback)         | vibrate(15ms)  |
+ * | Style    | iOS                                    | Android waveform + amplitude           |
+ * |----------|----------------------------------------|----------------------------------------|
+ * | `light`  | UIImpactFeedbackGenerator(.light)      | [0,40,10,1] @ 47% amplitude            |
+ * | `medium` | UIImpactFeedbackGenerator(.medium)     | [0,70,10,1] @ 78% amplitude            |
+ * | `heavy`  | UIImpactFeedbackGenerator(.heavy)      | [0,100,10,1] @ 100% amplitude          |
+ * | `rigid`  | UIImpactFeedbackGenerator(.rigid)      | [0,80,10,1] @ 100% (heavy feel)        |
+ * | `soft`   | UIImpactFeedbackGenerator(.soft)       | [0,30,10,1] @ 35% (light feel)         |
  *
+ * On API <26 the same timing arrays are used but without amplitude control.
  * `rigid` and `soft` are iOS 13+ only and gracefully degrade on Android.
  */
 export function impact(style: ImpactStyle): void {
@@ -66,8 +67,8 @@ export function impact(style: ImpactStyle): void {
  * Trigger a success notification haptic — use when a task completes.
  *
  * iOS: UINotificationFeedbackGenerator(.success)
- * Android ≥29: double-pulse waveform [0,30,80,30]
- * Android <29: double-pulse [0,15,50,15]
+ * Android: double-pulse waveform [0,35,80,35]
+ *         (amplitude control on API ≥26; same timings on <26 without amplitude)
  */
 export function success(): void {
   if (!guard()) {
@@ -80,8 +81,8 @@ export function success(): void {
  * Trigger a warning notification haptic — use for caution states.
  *
  * iOS: UINotificationFeedbackGenerator(.warning)
- * Android ≥29: single strong pulse [0,60]
- * Android <29: single pulse [0,10,30,10]
+ * Android: double-pulse waveform [0,45,70,45]
+ *         (amplitude control on API ≥26; same timings on <26 without amplitude)
  */
 export function warning(): void {
   if (!guard()) {
@@ -94,8 +95,8 @@ export function warning(): void {
  * Trigger an error notification haptic — use for failure states.
  *
  * iOS: UINotificationFeedbackGenerator(.error)
- * Android ≥29: triple-pulse waveform [0,30,60,30,60,30]
- * Android <29: triple-pulse [0,20,40,20,40,20]
+ * Android: triple-pulse waveform [0,35,55,35,55,35]
+ *         (amplitude control on API ≥26; same timings on <26 without amplitude)
  */
 export function error(): void {
   if (!guard()) {
@@ -226,9 +227,7 @@ export function getCapability(): HapticsCapability {
   return {
     available: NativeAdaptiveHaptics.supportsHaptics(),
     platform: Platform.OS,
-    amplitudeControl: NativeAdaptiveHaptics.hasAmplitudeControl
-      ? NativeAdaptiveHaptics.hasAmplitudeControl()
-      : undefined,
+    amplitudeControl: NativeAdaptiveHaptics.hasAmplitudeControl(),
   };
 }
 

@@ -12,6 +12,7 @@ jest.mock('../NativeAdaptiveHaptics', () => ({
     customFromFile: jest.fn(),
     setEnabled: jest.fn(),
     supportsHaptics: jest.fn(() => true),
+    hasAmplitudeControl: jest.fn(() => true),
   },
 }));
 

@@ -113,6 +113,9 @@
 }
 
 - (void)custom:(NSString *)patternJson {
+  // Reduce Motion gates custom patterns only — UIFeedbackGenerator-based
+  // APIs (impact/notify/selection) produce system-native feedback that
+  // iOS itself already suppresses under Reduce Motion, so no double-gating needed.
   if (UIAccessibilityIsReduceMotionEnabled()) return;
 
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -217,7 +220,12 @@
 
 - (void)playCustomPattern:(NSString *)json {
   if (@available(iOS 13.0, *)) {
-    if (!self.customEngine || !self.customEngineRunning) {
+    // Only gate on engine existence — not on customEngineRunning.
+    // prepare('custom') starts the engine asynchronously; if custom() fires
+    // before the completion handler runs, customEngineRunning is still NO
+    // even though the engine may already accept players. We try anyway
+    // and let createPlayerWithPattern:error: be the real gate.
+    if (!self.customEngine) {
       [self.impactMedium impactOccurred];
       return;
     }
@@ -249,7 +257,9 @@
 
 - (void)playCustomPatternFromFile:(NSString *)filename {
   if (@available(iOS 13.0, *)) {
-    if (!self.customEngine || !self.customEngineRunning) {
+    // Same reasoning as playCustomPattern: — gate on engine existence only,
+    // not on the async customEngineRunning flag.
+    if (!self.customEngine) {
       [self.impactMedium impactOccurred];
       return;
     }

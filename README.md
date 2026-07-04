@@ -1,5 +1,9 @@
 # react-native-adaptive-haptics
 
+[![npm version](https://img.shields.io/npm/v/react-native-adaptive-haptics)](https://www.npmjs.com/package/react-native-adaptive-haptics)
+[![license](https://img.shields.io/npm/l/react-native-adaptive-haptics)](LICENSE)
+[![platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-blue)](https://www.npmjs.com/package/react-native-adaptive-haptics)
+
 > **Write what you mean, not how to do it.**
 
 The best cross-platform haptic feedback library for React Native. A **semantic-first** API that eliminates platform-specific code — describe the _feeling_ you want, and the library chooses the best native implementation.
@@ -12,6 +16,14 @@ haptics.impact('light'); // button press
 haptics.success(); // task completed
 haptics.error(); // something went wrong
 ```
+
+## Requirements
+
+| Platform     | Minimum Version      |
+| ------------ | -------------------- |
+| React Native | 0.71+                |
+| iOS          | 13.0                 |
+| Android      | API 23 (Android 6.0) |
 
 ## Features
 
@@ -48,6 +60,21 @@ Add the VIBRATE permission to `AndroidManifest.xml` (the library declares it, bu
 ```
 
 ## Quick Start
+
+The library supports two import styles — pick the one that fits your codebase:
+
+```ts
+// Namespaced (recommended for discoverability)
+import { haptics } from 'react-native-adaptive-haptics';
+haptics.impact('medium');
+
+// Tree-shakeable (smaller bundle when using only a few functions)
+import { impact, success } from 'react-native-adaptive-haptics';
+impact('medium');
+success();
+```
+
+Full example with pre-warming:
 
 ```ts
 import { haptics } from 'react-native-adaptive-haptics';
@@ -98,7 +125,13 @@ haptics.prepareAll();
 
 ### Custom Patterns
 
+Custom patterns require the iOS `CHHapticEngine` to be running. **Always call `prepare('custom')` first** — otherwise the pattern silently falls back to a medium impact with no warning.
+
 ```ts
+// Pre-warm the engine (call onPressIn, screen mount, or right before playback)
+haptics.prepare('custom');
+
+// Play a declarative pattern
 haptics.custom([
   { intensity: 0.8, sharpness: 0.5, duration: 100 },
   { delay: 50 },
@@ -109,10 +142,24 @@ haptics.custom([
 For patterns designed in Apple's Haptic Composer (iOS only; no-ops gracefully on Android):
 
 ```ts
+haptics.prepare('custom');
 haptics.customFromFile('heartbeat.ahap');
 ```
 
 > **Note:** `.ahap` files are an Apple format. Use `haptics.custom(...)` for cross-platform patterns. `customFromFile` provides API symmetry but only plays on iOS.
+
+<details>
+<summary><b>Bundling .ahap files for iOS</b></summary>
+
+AHAP files must be added to the Xcode app bundle — Metro does not bundle them automatically.
+
+1. Create a `haptics/` folder inside your iOS project (e.g. `ios/YourApp/haptics/`)
+2. Place your `.ahap` files there
+3. In Xcode: right-click your app target → **Add Files to "YourApp"** → select the `.ahap` files
+4. Ensure **"Copy items if needed"** is unchecked and your app target is checked
+5. Verify the files appear in **Build Phases → Copy Bundle Resources**
+
+</details>
 
 ### Control
 
@@ -124,11 +171,27 @@ haptics.setEnabled(false);
 if (haptics.supportsHaptics()) {
   haptics.impact('medium');
 }
+```
 
-// Get detailed capability info
+#### `haptics.getCapability()`
+
+Returns detailed info about the device's haptic hardware:
+
+```ts
+interface HapticsCapability {
+  /** Whether the device has any haptic hardware. */
+  available: boolean;
+  /** Platform name ('ios' | 'android'). */
+  platform: string;
+  /** Whether amplitude control is available (Android 8+). */
+  amplitudeControl?: boolean;
+}
+```
+
+```ts
 const cap = haptics.getCapability();
-// { available: true, platform: 'ios' }
-// On Android 8+: { available: true, platform: 'android', amplitudeControl: true }
+// iOS:     { available: true, platform: 'ios' }
+// Android: { available: true, platform: 'android', amplitudeControl: true }
 ```
 
 ## Platform Mapping
@@ -137,17 +200,20 @@ The library automatically maps semantic calls to the best available native primi
 Android uses **custom waveform patterns** (rather than predefined effects) for consistent
 feel across OEMs (Samsung, Pixel, OnePlus, etc.). All timings are manually tuned.
 
-| Semantic           | iOS                            | Android (API ≥26)                              | Android <26          |
-| ------------------ | ------------------------------ | ---------------------------------------------- | -------------------- |
-| `selection()`      | `UISelectionFeedbackGenerator` | Waveform `[0,25,10,1]` @ 40% amplitude         | `vibrate(25ms)`      |
-| `impact('light')`  | `.light`                       | Waveform `[0,40,10,1]` @ 47% amplitude         | `vibrate(40ms)`      |
-| `impact('medium')` | `.medium`                      | Waveform `[0,70,10,1]` @ 78% amplitude         | `vibrate(70ms)`      |
-| `impact('heavy')`  | `.heavy`                       | Waveform `[0,100,10,1]` @ 100% amplitude       | `vibrate(100ms)`     |
-| `impact('rigid')`  | `.rigid` (iOS 13+)             | Waveform `[0,80,10,1]` @ 100% (heavy fallback) | `vibrate(80ms)`      |
-| `impact('soft')`   | `.soft` (iOS 13+)              | Waveform `[0,30,10,1]` @ 35% (light fallback)  | `vibrate(30ms)`      |
-| `success()`        | `.success` notification        | Double-pulse `[0,35,80,35]`                    | `[0,15,50,15]`       |
-| `warning()`        | `.warning` notification        | Double-pulse `[0,45,70,45]`                    | `[0,10,30,10]`       |
-| `error()`          | `.error` notification          | Triple-pulse `[0,35,55,35,55,35]`              | `[0,20,40,20,40,20]` |
+On Android API <26, the same timing arrays are used but without per-segment amplitude
+control (the system applies its own default intensity).
+
+| Semantic           | iOS                            | Android                                          |
+| ------------------ | ------------------------------ | ------------------------------------------------ |
+| `selection()`      | `UISelectionFeedbackGenerator` | Waveform `[0,25,10,1]` @ 40% amplitude           |
+| `impact('light')`  | `.light`                       | Waveform `[0,40,10,1]` @ 47% amplitude           |
+| `impact('medium')` | `.medium`                      | Waveform `[0,70,10,1]` @ 78% amplitude           |
+| `impact('heavy')`  | `.heavy`                       | Waveform `[0,100,10,1]` @ 100% amplitude         |
+| `impact('rigid')`  | `.rigid` (iOS 13+)             | Waveform `[0,80,10,1]` @ 100% (heavy fallback)   |
+| `impact('soft')`   | `.soft` (iOS 13+)              | Waveform `[0,30,10,1]` @ 35% (light fallback)    |
+| `success()`        | `.success` notification        | Double-pulse `[0,35,80,35]`                      |
+| `warning()`        | `.warning` notification        | Double-pulse `[0,45,70,45]`                      |
+| `error()`          | `.error` notification          | Triple-pulse `[0,35,55,35,55,35]`                |
 
 Fallback timings are **manually tuned on reference devices** (Pixel, Samsung, OnePlus), not guessed.
 
@@ -168,12 +234,16 @@ Fallback timings are **manually tuned on reference devices** (Pixel, Samsung, On
 
 | Feature                 | expo-haptics | react-native-haptic-feedback | **adaptive-haptics** |
 | ----------------------- | ------------ | ---------------------------- | -------------------- |
-| Semantic API            | ❌           | ❌                           | ✅                   |
-| Custom pattern DSL      | ❌           | ❌                           | ✅                   |
+| Semantic API            | ⚠️ [¹](#s1)  | ⚠️ [²](#s2)                  | ✅                   |
+| Custom pattern DSL      | ❌           | ✅ [²](#s2)                  | ✅                   |
 | `prepare()` pre-warming | ❌           | ❌                           | ✅                   |
-| .ahap file support      | ❌           | ❌                           | ✅                   |
+| .ahap file support      | ❌           | ✅ [²](#s2)                  | ✅                   |
 | Tuned fallback table    | ❌           | ❌                           | ✅                   |
 | TurboModule (Fabric)    | ❌           | ❌                           | ✅                   |
+
+> <a id="s1">¹</a> **expo-haptics** has semantic methods (`selectionAsync`, `notificationAsync`, `impactAsync`) but requires verbose enum constants (`Haptics.ImpactFeedbackStyle.Light`) instead of string literals.
+>
+> <a id="s2">²</a> **react-native-haptic-feedback** supports semantic types via `trigger("impactLight")`, custom patterns via `triggerPattern(events[])` + `pattern("oO.O")`, and AHAP files via `playAHAP` / `playHaptic` — but its API is less structured (single `trigger()` dispatch) and has no pre-warming.
 
 ## Roadmap
 
@@ -187,13 +257,34 @@ Planned enhancements for future releases:
 
 PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
 
+## Troubleshooting
+
+<details>
+<summary><b>Haptics don't fire on iOS simulator</b></summary>
+
+Core Haptics and the Taptic Engine are **not available in the iOS Simulator**. Test on a physical device.
+
+</details>
+
+<details>
+<summary><b>Android vibration isn't working</b></summary>
+
+1. Ensure the `VIBRATE` permission is declared in `AndroidManifest.xml` (the library auto-declares it, but check your merged manifest)
+2. Check that your device's vibration is enabled in system settings
+3. On Android 12+, vibration intensity can be lowered globally — check **Settings → Sound & Vibration**
+
+</details>
+
+<details>
+<summary><b>`supportsHaptics()` returns `false` on an iPhone</b></summary>
+
+This is normal on older devices: iPhones before the 6s and certain iPad models lack a Taptic Engine. The library gracefully no-ops — your app won't crash, but no feedback will play.
+
+</details>
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
-
-## License
-
-MIT
 
 ## License
 

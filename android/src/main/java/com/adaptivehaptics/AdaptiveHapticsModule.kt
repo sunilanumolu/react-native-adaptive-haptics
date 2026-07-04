@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -97,8 +98,10 @@ class AdaptiveHapticsModule(reactContext: ReactApplicationContext) :
     try {
       val pattern = JSONArray(patternJson)
       playCustomPattern(pattern)
-    } catch (_: Exception) {
-      // Silently fall back — malformed JSON shouldn't crash
+    } catch (e: Exception) {
+      // Malformed JSON shouldn't crash the app, but log a warning in debug
+      // so developers catch pattern-definition bugs during development.
+      Log.w(NAME, "Custom haptic pattern parse failed: ${e.message}")
     }
   }
 
@@ -239,9 +242,13 @@ class AdaptiveHapticsModule(reactContext: ReactApplicationContext) :
       }
 
       val intensity = item.optDouble("intensity", 0.5)
+      val sharpness = item.optDouble("sharpness", 0.5)
       val duration = item.optLong("duration", 50)
 
-      val amplitude = (intensity * 255).toInt().coerceIn(1, 255)
+      // Blend intensity and sharpness into a single amplitude value.
+      // Sharpness > 0.5 boosts amplitude (crisp taps feel stronger);
+      // sharpness < 0.5 reduces it (round/soft taps feel gentler).
+      val amplitude = ((intensity * 0.7 + sharpness * 0.3) * 255).toInt().coerceIn(1, 255)
 
       if (timings.isEmpty() || timings.last() != 0L) {
         // First segment or after a delay — add a wait before vibrating

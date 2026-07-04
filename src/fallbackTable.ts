@@ -1,12 +1,22 @@
 /**
- * Fallback vibration patterns for Android API < 29.
+ * Fallback vibration patterns for Android API < 26.
+ *
+ * **IMPORTANT — Reference only.** These values are NOT consumed by the
+ * native modules at runtime. The Kotlin (Android) and Obj-C (iOS) modules
+ * each maintain their own independent hardcoded timing arrays. This table
+ * exists for documentation and as a tuning reference — do NOT rely on
+ * these numbers matching what actually fires on-device.
+ *
+ * If you tune the native-side timings, update this table to match, or
+ * better: wire the native module to read a shared config so there is only
+ * one source of truth.
  *
  * These timings (in milliseconds) have been manually tuned on reference
  * devices (Pixel, Samsung, OnePlus) to approximate iOS UIFeedbackGenerator
  * sensations as closely as possible given hardware limitations.
  *
  * Format: [delay, vibrate, delay, vibrate, ...] alternating pattern.
- * Passed directly to Vibration.vibrate(pattern, -1) on API < 29.
+ * Passed directly to Vibration.vibrate(pattern, -1) on API < 26.
  *
  * Contributions welcome! If you tune these on a new device, please PR.
  */

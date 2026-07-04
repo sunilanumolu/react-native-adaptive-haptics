@@ -1,7 +1,7 @@
 buildscript {
   ext.AdaptiveHaptics = [
     kotlinVersion: "2.0.21",
-    minSdkVersion: 24,
+    minSdkVersion: 23,
     compileSdkVersion: 36
   ]
 
