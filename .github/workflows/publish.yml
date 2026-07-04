@@ -1,11 +1,17 @@
 name: Publish to npm
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
+
+# Only run if CI passed — skip on failure or cancellation
+# (still gate on version-check in the job itself)
 
 jobs:
   publish:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
